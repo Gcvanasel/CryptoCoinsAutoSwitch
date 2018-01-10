@@ -1,0 +1,40 @@
+#!/bin/bash
+### Switch between most profitable coin on Crypto-Coinz, bash script written by CvA
+
+source ~/1bash
+BITCOIN="theGROUND"
+
+# Creating a log file to record coin switch 
+LOG_FILE="/home/m1/8_cryptocoinzlog"
+
+if [ -e "$LOG_FILE" ] ; then
+  #Limit the logfile, just keep the last 2K
+  LASTLOG=$(tail -n 1K $LOG_FILE)
+  echo "$LASTLOG"
+  echo ""
+fi
+
+while [ $BITCOIN == "theGROUND" ]
+do
+
+python2.7 CryptoCoinz.py
+sleep 5
+
+CURRENT_COIN=$(head -n 150 /home/m1/1bash | grep COIN= | sed 's/COIN=//' | sed 's/\"//' | sed 's/\"//')
+MOSTPROFIT_COIN=$(cat /home/m1/CryptoCoinz_Coins)
+COIN_SYMBOL=$(cat /home/m1/CryptoCoinz_CoinSymbol)
+COIN_PROFIT=$(cat /home/m1/CryptoCoinz_CurrentProfits)
+TIMEIN=$COINZ_AUTO_SWITCH_SYNC_INTERVAL
+TIMEOUT=$(($TIMEIN * 60))
+
+if [ "$CURRENT_COIN" != "$COIN_SYMBOL" ]
+then
+sed -i 's/'COIN=\"$CURRENT_COIN\"'/'COIN=\"$COIN_SYMBOL\"/'' /home/m1/1bash
+sleep 1
+pkill -f 3main
+echo ""
+echo "$(date) Mining switched from $CURRENT_COIN to $MOSTPROFIT_COIN at a profit of $COIN_PROFIT" | tee -a ${LOG_FILE}
+echo "Check again in $TIMEOUT seconds" #| tee -a ${LOG_FILE}
+sleep $TIMEOUT
+fi
+done
