@@ -62,8 +62,9 @@ formData = {
 
 
 class CoinData:
-    def __init__(self, coinname, coincurrentprofit, coindailyprofit):
+    def __init__(self, coinname, coinsymbol, coincurrentprofit, coindailyprofit):
         self.coinname = coinname
+        self.coinsymbol = coinsymbol
         self.coincurrentprofit = coincurrentprofit
         self.coindailyprofit = coindailyprofit
 
@@ -77,6 +78,8 @@ content = soup.find('tr', {'id': 'row'})
 log_coins = open("CryptoCoinz_Coins", "w")
 log_currentproffits = open("CryptoCoinz_CurrentProfits", "w")
 log_dailyprofits = open("CryptoCoinz_DailyProfits", "w")
+log_coinsymbol = open("CryptoCoinz_CoinSymbol", "w")
+# log_coinsnomine = open("CryptoCoinz_CoinsNoMine", "r")
 
 coin_object = []
 Coin = 'First'
@@ -86,12 +89,16 @@ while Coin != 'None':
         contentText = content.text
         findCoin = contentText.find('Block Explorer')
         Coin = contentText[0:findCoin]
-        findFirstDollar = contentText.find('$')
-        findSecondDollar = contentText.find('$', findFirstDollar + 1)
-        findThirdDollar = contentText.find('$', findSecondDollar + 1)
-        CurrentProfit = contentText[findFirstDollar + 2:findSecondDollar - 1]
-        DailyProfit = contentText[findSecondDollar + 2:findThirdDollar - 1]
-        coin_object.append(CoinData(Coin, float(CurrentProfit), float(DailyProfit)))
+        CoinSymbol = Coin[Coin.find('(')+1:len(Coin)-1]
+        with open("CryptoCoinz_CoinsNoMine") as f:
+            for line in f:
+                if line != CoinSymbol:
+                    findFirstDollar = contentText.find('$')
+                    findSecondDollar = contentText.find('$', findFirstDollar + 1)
+                    findThirdDollar = contentText.find('$', findSecondDollar + 1)
+                    CurrentProfit = contentText[findFirstDollar + 2:findSecondDollar - 1]
+                    DailyProfit = contentText[findSecondDollar + 2:findThirdDollar - 1]
+                    coin_object.append(CoinData(Coin, CoinSymbol, float(CurrentProfit), float(DailyProfit)))
         content = content.nextSibling
     else:
         Coin = 'None'
@@ -99,6 +106,7 @@ while Coin != 'None':
 coin_object.sort(key=lambda coindata: coindata.coincurrentprofit, reverse=True)
 for val in coin_object:
     log_coins.write(val.coinname + '\n')
+    log_coinsymbol.write(val.coinsymbol + '\n')
     log_currentproffits.write(str(val.coincurrentprofit) + '\n')
     log_dailyprofits.write(str(val.coindailyprofit) +'\n')
 
